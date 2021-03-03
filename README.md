@@ -8,4 +8,4 @@ YukPilih Web Polling
 4. Fourth, ``` php artisan key:generate ```
 5. Fifth, change database config
 6. Sixth, ``` npm run install && npm run dev ```
-7. Seventh, ``` php artisan run serve ```
+7. Seventh, ``` php artisan serve ```
