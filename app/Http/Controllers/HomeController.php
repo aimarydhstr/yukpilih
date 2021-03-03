@@ -7,6 +7,7 @@ use App\Models\Poll;
 use App\Models\Vote;
 use App\Models\Division;
 use Auth;
+use Hash;
 
 class HomeController extends Controller
 {
@@ -29,10 +30,16 @@ class HomeController extends Controller
     {
         $poll = Poll::with('choice')->get();
         $div = Division::all();
-        $jml = Vote::groupBy('poll_id')->orderBy('created_at', 'DESC')->count();
-        $v = Vote::groupBy('choice_id')->orderBy('created_at', 'DESC')->count();
         $user = Auth::user();
         
-        return view('home', compact('poll', 'v', 'jml', 'user', 'div'))->with('i');
+        $polls = Poll::orderBy('created_at', 'DESC')->first();
+        $polls = $polls->id + 1;
+        
+        if(Hash::check('password', Auth::user()->password)) {
+            return redirect()->route('change')->with('success', 'You must change your old password! Old password : password');
+        } else {
+            return view('home', compact('poll', 'user', 'div', 'polls'))->with('i');
+        }
     }
+
 }

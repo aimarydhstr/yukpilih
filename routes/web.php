@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\Auth\ChangePasswordController;
 use App\Http\Controllers\DivisionController;
 use App\Http\Controllers\PollController;
 use App\Http\Controllers\ChoiceController;
@@ -24,7 +25,10 @@ Route::get('/', function () {
 
 Auth::routes();
 
-Route::get('/home', [HomeController::class, 'index'])->name('home')->middleware(['auth', 'ceklevel:user']);
+Route::get('/home', [HomeController::class, 'index'])->name('home')->middleware(['auth']);
+Route::get('/change', [ChangePasswordController::class, 'change'])->name('change')->middleware(['auth']);
+Route::post('/changePassword', [ChangePasswordController::class, 'changePassword'])->name('changePassword')->middleware(['auth']);
+
 Route::post('/vote/store/{id}', [VoteController::class, 'store'])->name('vote.store')->middleware(['auth', 'ceklevel:user']);
 
 Route::prefix('admin')->middleware(['auth', 'ceklevel:admin'])->group(function() {

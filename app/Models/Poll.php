@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Choice;
+use App\Models\User;
 
 class Poll extends Model
 {
@@ -14,5 +15,8 @@ class Poll extends Model
 
     public function choice(){
         return $this->hasMany(Choice::class);
+    }
+    public function user(){
+        return $this->hasMany(User::class);
     }
 }

@@ -8,7 +8,7 @@
             <div class="card p-4 h-100 position-relative">
             <form action="{{ route('vote.store', $p->id) }}" method="POST">
             @csrf
-                <p class="text-disabled">Deadline : {{ date('d F Y, H:i', strtotime($p->deadline)) }}</p>
+                <p>Deadline : {{ date('d F Y, H:i', strtotime($p->deadline)) }}</p>
                 <h3>{{ $p->title }} </h3>
                 <p>{{ $p->description }}</p>
                 @foreach($p->choice as $c)
@@ -17,19 +17,30 @@
                     <?php 
                         $vs = DB::table('votes')->where('choice_id', '=', $c->id)->count();
                         $v = DB::table('votes')->groupBy('division_id')->where('choice_id', '=', $c->id)->count();
-                        $vc = DB::table('votes')->where('choice_id', '=', $c->id)->groupBy('division_id')->get();
+                        $i = 0;
+                        foreach($div as $d){
+                            $sc = DB::table('votes')->where('division_id', '=', $d->id)->count();
+                            $vc = DB::table('votes')->where('division_id', '=', $d->id)->where('choice_id', '=', $c->id)->count();
+                            $vc1[$i++] = $vc;
+                            $vc2 = max($vc1);
+                            if ($vc >= $sc) {
+                                $vc = 1;
+                            } else {
+                                $v
+                            }
+                        }
                         
                         $jml = DB::table('votes')->where('choice_id', '=', $c->id)->count();
                         if ($vs === 0) {
                             $jmls = 0;
                         } else { 
                             $ar[$i] = $v;
+                            $jm = DB::table('votes')->where('poll_id', '=', $p->id)->count();
                             $jmll = $v / $jm * 100 / 100;
                             $ar2[$i] = $jmll;
                             $ss = max($ar);
-                            $jm = DB::table('votes')->where('poll_id', '=', $p->id)->count();
                             if ($v === $ss) {
-                                $jmls = 1 / $jm * 100 / 100;
+                                $jmls = $v / $jm * 100 / 100;
                             }
                         } 
                         
@@ -38,20 +49,34 @@
                     @if($done < 1 && $p->deadline > date('Y-m-d H:i:s', strtotime(now())))
                     <label class="d-inline ml-2" for="cc{{ $c->id }}">{{ $c->choices }}</label>
                     @else
-                    @foreach($vc as $vcc)
-                    <label class="d-inline ml-2" for="cc{{ $c->id }}">{{ $c->choices.' (%)' }}</label>
+                    <label class="d-inline ml-2" for="cc{{ $c->id }}">{{ $c->choices.' ('.$jmls.'%)' }}</label>
+                    @foreach($vc1 as $vcc)
+                    <label class="d-block w-100 my-2" for="cc{{ $c->id }}">{{ $c->choices.' ('.$vcc.'%)' }}</label>
                     @endforeach
                     @endif
                 </div>
                 <?php $i++ ?>
                 @endforeach
                 <div class="form-group">
-                  <button type="submit" class="btn btn-primary mt-3 px-3" <?php if ($p->deadline < date('Y-m-d H:i:s', strtotime(now())) || $done > 0) {echo 'disabled title="Cant Vote!"';} ?>>Vote</button>
+                  <button type="submit" class="btn btn-primary mt-3 px-3" <?php if ($p->deadline < date('Y-m-d H:i:s', strtotime(now())) || $done > 0 || $user->role === 'admin') {echo 'disabled title="Cant Vote!"';} ?>>Vote</button>
                 </div>
             </form>
             </div>
         </div>
     @endforeach
     </div>
+    <a href="{{ route('poll.create', $polls) }}" title="Create Poll" class="btn btn-success shadow p-0 fixed-bottom rounded-circle btns">+</a>
 </div>
+
+<style>
+.btns {
+    width:50px;
+    height:50px;
+    font-size:30px;
+    bottom:20px;
+    right:20px;
+    left:unset;
+}
+</style>
+
 @endsection

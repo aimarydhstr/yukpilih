@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use App\Models\Division;
+use App\Models\Poll;
 
 class User extends Authenticatable
 {
@@ -46,5 +47,8 @@ class User extends Authenticatable
 
     public function division(){
         return $this->belongsTo(Division::class);
+    }
+    public function poll(){
+        return $this->belongsTo(Poll::class);
     }
 }
