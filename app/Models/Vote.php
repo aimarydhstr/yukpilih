@@ -15,16 +15,17 @@ class Vote extends Model
 
     protected $fillable = ['choice_id', 'user_id', 'poll_id', 'division_id'];
 
-    public function choice(){
-        return $this->hasMany(Choice::class);
+    public function choices(){
+        return $this->belongsTo(Choice::class,'choice_id');
     }
-    public function Poll(){
-        return $this->hasMany(Poll::class);
-    }
-    public function User(){
-        return $this->hasMany(User::class);
-    }
+    // public function Poll(){
+    //     return $this->hasMany(Poll::class);
+    // }
+    // public function User(){
+    //     return $this->hasMany(User::class);
+    // }
+
     public function Division(){
-        return $this->hasMany(Division::class);
+        return $this->belongsTo(Division::class);
     }
 }
