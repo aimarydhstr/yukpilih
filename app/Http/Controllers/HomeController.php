@@ -28,84 +28,96 @@ class HomeController extends Controller
      */
     public function index()
     {
-        // $poll = Poll::with('choice')->get();
-        // $div = Division::all();
-        // $user = Auth::user();
-
-        // $polls = Poll::orderBy('created_at', 'DESC')->first();
-        // $polls = $polls->id + 1;
-
-        // if(Hash::check('password', Auth::user()->password)) {
-        //     return redirect()->route('change')->with('success', 'You must change your old password! Old password : password');
-        // } else {
-        //     return view('home', compact('poll', 'user', 'div', 'polls'))->with('i');
-        // }
-        $hasil_vote = [];
-        $votes = Poll::with(['choice', 'choice.votes', 'choice.votes.division'])->get();
-        $divisions = Division::with(['votes', 'votes.choices'])->get();
-        $total_poin = 0;
-        foreach ($divisions as $index => $item) {
-            // $hasil_vote[$item->name] = [
-            //     "division_name" => $item->name,
-            // ]
-            if ($item->votes) {
-                foreach ($item->votes as $index_v => $item_v) {
-                    // $hasil_vote[] = ["division_name" => $item->name,"choices" => $item_v->choices->toArray()];
-                    if (!in_array($item->name, array_column($hasil_vote,'division_name'))) {
-                        // $a[] = $value;
-                        $hasil_vote[$item->name] = ["division_name"=>$item->name,"choices"=>[$item_v->choices->toArray()]];
-                    }else{
-                        array_push($hasil_vote[$item->name]['choices'],$item_v->choices->toArray());
+        $polls = Poll::with(['choice','choice.votes','choice.votes.division'])->get();
+        // dd($polls->toArray());
+        // $votes = Vote::with(['division']);
+        $choices = $this->countTotalPoinDivison();
+        $total_choices = array_sum(array_column($choices,"total_poin"));
+        // dd($total_choices);
+        foreach($polls as $index => $item){
+            foreach($item->choice as $index_c => $item_c){
+                foreach($choices as $index_co => $item_co){
+                    if($index_co == $item_c['id']){
+                        $polls[$index]->choice[$index_c]->poin = $item_co['total_poin'] / $total_choices * 100;
                     }
                 }
             }
-
-            // if($item->votes->choices[0]){
-            //     $hasil_vote[] = [
-            //         "division_name" => $item->name,
-            //         "choice_name" => $item->votes->choices[0]->choices
-            //     ];
-            // }
-
         }
 
 
-        dd($hasil_vote);
-        dd($divisions->toArray());
-        $total_vote = Vote::count();
-        foreach ($votes as $index => $item) {
-            foreach ($item->choice as $index_c => $item_c) {
-                foreach ($item_c->votes as $index_v => $item_v) {
+        $user = Auth::user();
+        return view('home',compact("polls","user"));
+    }
+
+
+    private function countTotalPoinDivison(){
+        $division = Division::with('votes')->get();
+        $division_poin = [];
+        foreach ($division as $index => $item) {
+            $division_choice = [];
+
+            foreach ($item->votes as $index_v => $item_v) {
+                $poin = 0;
+                if (!in_array($item_v->choice_id, array_column($division_choice, "choice_id"))) {
+                    $poin += 1;
+                    $division_choice[] = ["choice_id" => $item_v->choice_id, "poll_id" => $item_v->poll_id, "division_id" => $item_v->division_id, "poin" => $poin];
+                } else {
+                    $index = array_search($item_v->choice_id, array_column($division_choice, "choice_id"));
+                    $poin = $division_choice[$index]['poin'] + 1;
+                    $division_choice[$index] = ["choice_id" => $item_v->choice_id, "poll_id" => $item_v->poll_id, "division_id" => $item_v->division_id, "poin" => $poin];
                 }
-                // dd(count($item_c->votes->toArray()));
-                // $votess = $item_c->votes->toArray();
-                // foreach($divisions as $index_d => $item_d){
+            }
 
-                // }
-
-                // foreach($item_)
-                // if(!empty($votess))
-                // $total_vote = $item->votes->toArray();
-                // if(!empty($votess)){
-                //     $hasil_vote[] = [
-                //         "choice_id" => $item_c->id,
-                //         "choice_name" => $item_c->choices,
-                //         "total_votes" => count($item_c->votes) / $total_vote * 100
-                //     ];
-                // }else{
-                //     $hasil_vote[] = [
-                //         "choice_id" => $item_c->id,
-                //         "choice_name" => $item_c->choices,
-                //         "total_votes" => 0
-                //     ];
-                // }
-
-                // foreach($item_c->votes as $index_v => $item_v){
-
-                // }
+            if (!empty($division_choice)) {
+                $highest_division_choice = [];
+                $poin = 0;
+                foreach ($division_choice as $index_c => $item_c) {
+                    // dd($item_c);
+                    if ($item_c['poin'] > $poin) {
+                        $poin = $item_c['poin'];
+                        $highest_division_choice[] =["poll_id" => $item_c['poll_id'], "choice_id" => $item_c['choice_id'], "poin" => $item_c['poin'] / count($division_choice)];
+                    } else if ($item_c['poin'] == $poin) {
+                        $poin = $item_c['poin'];
+                        $highest_division_choice[] =["poll_id" => $item_c['poll_id'], "choice_id" => $item_c['choice_id'], "poin" => $item_c['poin'] / count($division_choice)];
+                    }
+                }
+                $division_choice = $highest_division_choice;
+            }
+            $division_poin[] = [
+                "divison_name" => $item->name,
+                "division_id" => $item->id,
+                "divison_choice" => $division_choice
+            ];
+        }
+        $choices = [];
+        foreach($division_poin as $index_p => $item_p){
+            // dd($item_p);
+            if(!empty($item_p['divison_choice'])){
+                foreach($item_p['divison_choice'] as $index_c => $item_c){
+                    $total_poin = 0;
+                    if(!isset($choices[$item_c['choice_id']])){
+                        $total_poin += $item_c['poin'];
+                        $choices[$item_c['choice_id']] = [
+                            "poll_id" => $item_c['poll_id'],
+                            "choice_id" => $item_c['choice_id'],
+                            "total_poin" => $total_poin,
+                        ];
+                    }
+                    else{
+                        // $index = array_search($item_v->choice_id, array_column($choices, "choice_id"));
+                        $total_poin = $choices[$item_c['choice_id']]['total_poin'] + $item_c['poin'];
+                        $choices[$item_c['choice_id']]['total_poin'] = $total_poin;
+                    }
+                }
             }
         }
-        // dd($hasil_vote);
-        dd($votes->toArray());
+        // die();
+        // dd($choices);
+        // dd($division_poin);
+        // dd($division_choice);
+        // dd($division->toArray());
+        // dd($polls->toArray());
+        return $choices;
     }
+
 }
