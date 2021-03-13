@@ -79,19 +79,23 @@ class HomeController extends Controller
                 $highest_index = array_keys(array_column($division_choice, 'poin'), max(array_column($division_choice, 'poin')));
                 // dd($highest_index);
             }
+            // dd(count($highest_index));
+            // dd(count($division_choice));
+            // dd(count($item->votes));
+            // dd($division_choice);
             if (!empty($division_choice)) {
                 $highest_division_choice = [];
                 $poin = 0;
                 foreach ($division_choice as $index_c => $item_c) {
-                    // dd($item_c);
-                    if ($index_c == $highest_index[0]) {
-                        if ($item_c['poin'] > $poin) {
+                    // $poin = 1;
+                    if(count($highest_index) == 1){
+                        if ($index_c == $highest_index[0]) {
                             $poin = $item_c['poin'];
-                            $highest_division_choice[] = ["poll_id" => $item_c['poll_id'], "choice_id" => $item_c['choice_id'], "poin" => $item_c['poin'] / count($division_choice)];
-                        } else if ($item_c['poin'] == $poin) {
-                            $poin = $item_c['poin'];
-                            $highest_division_choice[] = ["poll_id" => $item_c['poll_id'], "choice_id" => $item_c['choice_id'], "poin" => $item_c['poin'] / count($division_choice)];
+                            $highest_division_choice[] = ["poll_id" => $item_c['poll_id'], "choice_id" => $item_c['choice_id'], "poin" => count($item->votes) / count($item->votes)];
                         }
+                    }else{
+                        $poin = $item_c['poin'];
+                        $highest_division_choice[] = ["poll_id" => $item_c['poll_id'], "choice_id" => $item_c['choice_id'], "poin" => $item_c['poin'] / count($item->votes)];
                     }
                 }
                 $division_choice = $highest_division_choice;
